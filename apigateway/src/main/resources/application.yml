@@ -1,0 +1,33 @@
+server:
+  port: 8888
+  servlet:
+    context-path: /backend
+spring:
+  cloud:
+    gateway:
+      routes:
+        - uri: http://localhost:7070/
+          predicates:
+            - Path=${server.servlet.context-path}/product/**
+          id: product
+          filters:
+            - StripPrefix=1
+            - TokenRelay=
+  security:
+    oauth2:
+      client:
+        registration:
+          login-gateway:
+            provider: spring
+            client-id: login-gateway
+            client-secret: openid-connect2
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: http://127.0.0.1:8888/login/oauth2/code/login-gateway
+            scope: openid, profile
+            client-name: gateway
+        provider:
+          spring:
+            authorization-uri: http://localhost:9000/oauth2/authorize
+            token-uri: http://localhost:9000/oauth2/token
+            jwk-set-uri: http://localhost:9000/oauth2/jwks

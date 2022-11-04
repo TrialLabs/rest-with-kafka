@@ -1,0 +1,48 @@
+version: '3.1'
+services: 
+  psql:
+    image: postgres:13.6
+    container_name: psql
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass123
+    ports:
+      - "5433:5432"
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+
+  zookeeper1:
+    image: confluentinc/cp-zookeeper:7.1.2.arm64
+    container_name: zookeeper1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper
+  
+  kafka1:
+    image: confluentinc/cp-kafka:7.1.2.arm64
+    container_name: kafka1
+    depends_on:
+      - zookeeper1
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+  psql_data:
+    driver: local
